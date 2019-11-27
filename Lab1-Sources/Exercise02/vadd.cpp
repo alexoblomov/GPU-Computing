@@ -33,7 +33,7 @@
 // ----------------------------------------------------------------
 
 #define TOL    (0.001)   // tolerance used in floating point comparisons
-#define LENGTH (1<<5)    // length of vectors a, b, and c
+#define LENGTH (1<<20)    // length of vectors a, b, and c
 
 int main(int argc, char *argv[])
 {
@@ -55,13 +55,15 @@ int main(int argc, char *argv[])
 
     try
     {
-        cl_uint deviceIndex = 2;
+        cl_uint deviceIndex = 0;
         parseArguments(argc, argv, &deviceIndex);
 
         // Get list of devices
         std::vector<cl::Device> devices;
         unsigned numDevices = getDeviceList(devices);
 
+        std::cout << "num devices: " << numDevices << std::endl;
+        
         // Check device index in range
         if (deviceIndex >= numDevices)
         {
@@ -110,7 +112,7 @@ int main(int argc, char *argv[])
         printf("\nThe kernels ran in %lf seconds\n", rtime);
 
         cl::copy(queue, d_c, begin(h_c), end(h_c));
-
+        
         // Test the results
         int correct = 0;
         float tmp;

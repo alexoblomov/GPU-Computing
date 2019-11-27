@@ -77,6 +77,13 @@ int main(void)
           std::cout << *st << " ";
         std::cout << "\x08)" << std::endl;
 
+         	
+
+        cl_device_fp_config prec;
+        dev->getInfo(CL_DEVICE_DOUBLE_FP_CONFIG, &prec);
+        std::cout << "\t\tPrecision: " << prec << std::endl;
+
+
         std::cout << "\t-------------------------" << std::endl;
       }
 

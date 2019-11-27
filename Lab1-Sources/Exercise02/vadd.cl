@@ -11,6 +11,7 @@
  ** ----------------------------------------------------------------
  */
 
+
 __kernel void vadd(
     __global float* a,
     __global float* b,
@@ -18,6 +19,19 @@ __kernel void vadd(
     const unsigned int count)
 {
   int i = get_global_id(0);
+  if(i < count)  {
+    c[i] = a[i] + b[i];
+  }
+}
+
+__kernel void vadd(opt
+    __global float* a,
+    __global float* b,
+    __global float* c,
+    const unsigned int count)
+{
+  int i = get_local_id(x) + get_work_dim(x) + get_global_size(x);
+ // to fill
   if(i < count)  {
     c[i] = a[i] + b[i];
   }

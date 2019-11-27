@@ -1,0 +1,1 @@
+/user/8/.base/kennarda/home/Documents/GPU-Computing/Lab1-Sources/Exercise01/CMakeFiles/DeviceInfo.dir
