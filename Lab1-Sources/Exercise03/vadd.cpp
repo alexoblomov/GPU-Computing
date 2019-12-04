@@ -34,7 +34,7 @@
 // ----------------------------------------------------------------
 
 #define TOL    (0.001)   // tolerance used in floating point comparisons
-#define LENGTH (1024)    // length of vectors a, b, and c
+#define LENGTH (1<<22)    // length of vectors a, b, and c
 
 int main(int argc, char *argv[])
 {
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 
   try
   {
-      cl_uint deviceIndex = 2;
+      cl_uint deviceIndex = 0;
       parseArguments(argc, argv, &deviceIndex);
 
         // Get list of devices

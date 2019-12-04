@@ -33,7 +33,7 @@
 // ----------------------------------------------------------------
 
 #define TOL    (0.001)   // tolerance used in floating point comparisons
-#define LENGTH (1<<20)    // length of vectors a, b, and c
+#define LENGTH (1<<22)    // length of vectors a, b, and c
 
 int main(int argc, char *argv[])
 {
@@ -97,10 +97,7 @@ int main(int argc, char *argv[])
 
         util::Timer timer;
 
-        vadd(
-                cl::EnqueueArgs(
-                    queue,
-                    cl::NDRange(count)),
+        vadd( cl::EnqueueArgs( queue, cl::NDRange(count)),
                 d_a,
                 d_b,
                 d_c,
