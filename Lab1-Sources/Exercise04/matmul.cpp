@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         cl::Program program(context, util::loadProgram("matmul.cl"), true);
 
         // Create the compute kernel from the program
-        cl::Kernel kernel_mul = cl::Kernel(program, "mmul");
+        cl::Kernel kernel_mul = cl::Kernel(program, "_mmul");
 
         // Display max group size for execution
         std::cout << "\nWork Group Size " << kernel_mul.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device) << std::endl;
@@ -148,6 +148,56 @@ int main(int argc, char *argv[])
             // figure out a local work group size for me.
 
             queue.enqueueNDRangeKernel(kernel_mul, cl::NullRange, global, local);
+
+            queue.finish();
+
+            run_time = (static_cast<double>(timer.getTimeMilliseconds()) / 1000.0) - start_time;
+
+            cl::copy(queue, d_c, h_C.begin(), h_C.end());
+
+            results(N, h_C, run_time);
+
+        } // end for loop
+
+        // ------------------------------------------------------------------
+        // OpenCL matrix multiplication ... Optimized
+        // ------------------------------------------------------------------
+
+        timer.reset();
+
+        // Create the compute kernel from the program
+        cl::Kernel kernel_mul_opt = cl::Kernel(program, "mmul");
+
+        // Display max group size for execution
+        std::cout << "\nWork Group Size " << kernel_mul_opt.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device) << std::endl;
+        std::cout << "Work Group Memory size " << kernel_mul_opt.getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device) << std::endl;
+
+        std::cout << "\n===== OpenCL, matrix mult, C(i,j) per work item, order %d ======" << N << std::endl;
+
+        // Do the multiplication COUNT times
+        for (int i = 0; i < COUNT; i++)
+        {
+            // Set output matrix to 0
+            zero_mat(N, h_C);
+
+            // Initialize arguments of kernel
+            kernel_mul_opt.setArg(0, N);
+            kernel_mul_opt.setArg(1, d_a);
+            kernel_mul_opt.setArg(2, d_b);
+            kernel_mul_opt.setArg(3, d_c);
+
+            // Set workspace and workgroup topologies
+            cl::NDRange global(N, N);
+            cl::NDRange local(16, 16);
+
+            start_time = static_cast<double>(timer.getTimeMilliseconds()) / 1000.0;
+
+            // Execute the kernel over the entire range of C matrix elements ... computing
+            // a dot product for each element of the product matrix.  The local work
+            // group size is set to NULL ... so I'm telling the OpenCL runtime to
+            // figure out a local work group size for me.
+
+            queue.enqueueNDRangeKernel(kernel_mul_opt, cl::NullRange, global, local);
 
             queue.finish();
 

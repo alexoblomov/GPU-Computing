@@ -1,5 +1,6 @@
 #define TILE_WIDTH 16
 
+// Naive
 __kernel void _mmul(const int taille,
    __global float* d_A,
    __global float* d_B,
@@ -32,11 +33,11 @@ __kernel void mmul(const int taille,
   __local float ds_M[TILE_WIDTH][TILE_WIDTH];
   __local float ds_N[TILE_WIDTH][TILE_WIDTH];
 
-  // Récupère le position local du work-item et du groupe de travail
+  // Récupère la position locale du work-item et du groupe de travail
   int bx = get_group_id(0); int by = get_group_id(1);
   int tx = get_local_id(0); int ty = get_local_id(1);
 
-  // Position de l'element de P sur lequel on travail
+  // Position de l'element de P sur lequel on travaille
   int Col = bx * TILE_WIDTH + tx;
   int Row = by * TILE_WIDTH + ty;
   float sp = 0;

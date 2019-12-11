@@ -13,19 +13,19 @@
  */
 
 #include "util.hpp"
-
+#include <err_code.h>
+#include "device_picker.hpp"
 #include <iostream>
+
 static long num_steps = 100000000;
 double step;
 extern double wtime();   // returns time since some fixed past point (wtime.c)
 
 int main ()
 {
+    /* Sequential Code */
     int i;
-
     double x, pi, sum = 0.0;
-
-
     step = 1.0/(double) num_steps;
 
     util::Timer timer;
@@ -40,5 +40,38 @@ int main ()
     std::cout<<"pi with "<<num_steps<<" steps is "
         << pi <<" in "
         <<run_time<<" seconds"<<std::endl;
+
+    /* Parallel Code */
+    cl_uint deviceIndex = 0;
+    parseArguments(argc, argv, &deviceIndex);
+
+    // Get list of devices
+    std::vector<cl::Device> devices;
+    unsigned numDevices = getDeviceList(devices);
+
+    // Check device index in range
+    if (deviceIndex >= numDevices)
+    {
+        std::cout << "Invalid device index (try '--list')\n";
+        return EXIT_FAILURE;
+    }
+
+    cl::Device device = devices[deviceIndex];
+
+    std::string name;
+    getDeviceName(device, name);
+    std::cout << "\nUsing OpenCL device: " << name << "\n";
+
+    std::vector<cl::Device> chosen_device;
+    chosen_device.push_back(device);
+    cl::Context context(chosen_device);
+    cl::CommandQueue queue(context, device);
+     timer.reset();
+
+    // Load in kernel source, creating a program object for the context
+    cl::Program program(context, util::loadProgram("pi.cl"), true);
+    
+
+    
 }
 
