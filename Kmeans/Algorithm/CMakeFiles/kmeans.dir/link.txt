@@ -1,0 +1,1 @@
+/opt/rh/devtoolset-8/root/usr/bin/c++  -Wno-deprecated-declarations -std=c++0x  -rdynamic CMakeFiles/kmeans.dir/kmeans.cpp.o  -o kmeans -lOpenCL 

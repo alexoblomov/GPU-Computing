@@ -1,0 +1,8 @@
+/user/8/.base/kennarda/home/Documents/GPU-Computing/Kmeans/CMakeFiles/rebuild_cache.dir
+/user/8/.base/kennarda/home/Documents/GPU-Computing/Kmeans/CMakeFiles/edit_cache.dir
+/user/8/.base/kennarda/home/Documents/GPU-Computing/Kmeans/Algorithm/CMakeFiles/rebuild_cache.dir
+/user/8/.base/kennarda/home/Documents/GPU-Computing/Kmeans/Algorithm/CMakeFiles/edit_cache.dir
+/user/8/.base/kennarda/home/Documents/GPU-Computing/Kmeans/Algorithm/CMakeFiles/kmeans.dir
+/user/8/.base/kennarda/home/Documents/GPU-Computing/Kmeans/DeviceInfo/CMakeFiles/rebuild_cache.dir
+/user/8/.base/kennarda/home/Documents/GPU-Computing/Kmeans/DeviceInfo/CMakeFiles/edit_cache.dir
+/user/8/.base/kennarda/home/Documents/GPU-Computing/Kmeans/DeviceInfo/CMakeFiles/DeviceInfo.dir

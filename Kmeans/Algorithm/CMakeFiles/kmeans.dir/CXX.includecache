@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/user/8/.base/kennarda/home/Documents/GPU-Computing/Kmeans/Algorithm/kmeans.cpp
+iostream
+-
+vector
+-
+random
+-
+
