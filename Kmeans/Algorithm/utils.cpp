@@ -3,8 +3,10 @@
 #include <random>
 #include <map>
 
-#include "utils.h"
-/*
+#include 'utils.h'
+
+typedef std::vector<float> point;
+
 void initialize_points(std::vector<point> & points, uint num_points, int range_min, int range_max)
 {
     std::random_device dev;
@@ -65,33 +67,8 @@ void assign_points(std::vector<point> & points, std::map<point, uint> & cluster_
         for(uint center = 0; center < num_clusters; center ++)
         {
             d[center] = compute_distance(p, center);
+            //assignment[p] = cluster index that corresponds to the min element of d
         }
         
     }
-}
- */
-
-int main()
-{
-    std::cout << "ok here we go" << std::endl;
-    unsigned int num_points = 15; 
-    unsigned int num_clusters = 3;
-    int range_min = -5;
-    int range_max =  5;
-
-    std::vector<point> points;
-    initialize_points(points, num_points, range_min, range_max);
-
-    std::map<point, uint > map_cluster_centers;
-    initialize_centers(points, map_cluster_centers, num_clusters);
-
-    std::vector<uint> points_assignment;
-    assign_points(points, map_cluster_centers, points_assignment, num_clusters);
-
-    // initialize random unif points, clusters
-    // send to kernel to compute voronoi cells
-    // construct new cluster centers
-    // iterate
-
-    return 0;
 }
