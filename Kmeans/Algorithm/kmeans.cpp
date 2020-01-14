@@ -3,7 +3,7 @@
 #include <random>
 #include <map>
 
-#include "utils.h"
+#include <utils.h>
 /*
 void initialize_points(std::vector<point> & points, uint num_points, int range_min, int range_max)
 {

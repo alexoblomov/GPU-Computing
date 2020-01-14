@@ -1,8 +1,7 @@
 cmake_minimum_required (VERSION 2.8.11)
 
-set(EXEC "kmeans")
-
-add_executable(${EXEC} kmeans.cpp)
+set(EXEC "Kmeans")
+add_executable(${EXEC} kmeans.cpp utils.cpp utils.h)
 
 # Ajoute la dépendence sur les fichiers clh
 target_link_libraries(${EXEC} PUBLIC ${OpenCL_LIBRARY})
