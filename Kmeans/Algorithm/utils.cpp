@@ -2,6 +2,8 @@
 #include <vector>
 #include <random>
 #include <map>
+#include <fstream>
+#include <iterator>
 
 #include "utils.h"
 
@@ -81,6 +83,7 @@ void reassign_points_to_clusters(const std::vector<point> & points, const std::v
     for(uint p_idx = 0; p_idx < points.size(); p_idx++)
     {
         cur_dist = compute_distance(points[p_idx], centers[assignment[p_idx]]);
+        idx_assign = assignment[p_idx];
         for(uint center_idx = 0; center_idx < num_clusters; center_idx++)
         {
             dist = compute_distance(points[p_idx], centers[center_idx]);
@@ -97,8 +100,7 @@ void reassign_points_to_clusters(const std::vector<point> & points, const std::v
 void compute_centroids(std::vector<point> &points, std::vector<point> centroids, 
 std::vector<uint> assignment, uint num_clusters)
 {
-    std::vector<point> means(num_clusters, point{0,0,0});
-    std::cout << "reached compute centroids" << std::endl;
+    std::vector<point> means(num_clusters, point{0,0});
     //uint num_points_per_cluster[num_clusters] = {0};
     std::vector<uint> num_points_per_cluster(num_clusters, 0);
     uint cluster_idx = 0;
@@ -106,7 +108,9 @@ std::vector<uint> assignment, uint num_clusters)
     {
         cluster_idx = assignment[p_idx];
         for(uint coord = 0; coord < points[p_idx].size(); coord ++)
-            means[cluster_idx][coord] =  means[cluster_idx][coord] + points[p_idx][coord];
+        {
+            means[cluster_idx][coord] =  means[cluster_idx][coord] + points[p_idx][coord]; //
+        }
         num_points_per_cluster[cluster_idx] ++;
     }
     for (uint cluster_idx = 0; cluster_idx < num_clusters; cluster_idx ++)
@@ -126,5 +130,41 @@ uint max_iter, std::vector<point> points, std::vector<point> centers,std::vector
         {
             compute_centroids(points, centers, assignment, num_clusters);
             reassign_points_to_clusters(points, centers, assignment, num_clusters);
+            if (iter %20 == 0)
+                create_snapshot(points,centers,assignment, num_points, num_clusters,iter);
         }
+}
+
+void write_vector_of_vector_to_file(std::ofstream &stream, std::vector<point> &points)
+{
+    for (const auto &vt : points)
+    {
+        std::copy(vt.cbegin(), vt.cend(),
+                  std::ostream_iterator<float>(stream, " "));
+        stream << '\n';
+    }
+}
+
+void write_vector_to_file(std::ofstream &stream, std::vector<uint> &integers)
+{
+    for (const auto & elem : integers) stream << elem << '\n';
+}
+
+void create_snapshot(std::vector<point> points, std::vector<point> centroids, 
+std::vector<uint> assignment, uint num_points, uint num_clusters, uint iter)
+{
+    std::string assignment_file = "assignment_n" + std::to_string(num_points) + 
+    "_iter" + std::to_string(iter) + ".txt";
+    std::ofstream assignment_fstream(assignment_file);
+    write_vector_to_file(assignment_fstream, assignment);
+
+    std::string points_file = "points_n" + std::to_string(num_points) + 
+    "_iter" + std::to_string(iter) + ".txt";
+    std::ofstream points_fstream(points_file);
+    write_vector_of_vector_to_file(points_fstream, points);
+
+    std::string centroids_file = "centroids_n" + std::to_string(num_points) + 
+    "_iter" + std::to_string(iter) + ".txt";
+    std::ofstream centroids_fstream(centroids_file);
+    write_vector_of_vector_to_file(centroids_fstream, centroids);
 }
