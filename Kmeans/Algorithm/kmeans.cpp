@@ -1,11 +1,11 @@
 #include <iostream>
 #include <vector>
 #include <random>
-#include <map>
+#include <set>
 
-#include <utils.h>
-/*
-void initialize_points(std::vector<point> & points, uint num_points, int range_min, int range_max)
+typedef std::vector<float> point;
+
+void initialize_points(std::vector<point> & points, const uint num_points, const int range_min, const int range_max)
 {
     std::random_device dev;
     std::mt19937 rng(dev());
@@ -22,20 +22,9 @@ void initialize_points(std::vector<point> & points, uint num_points, int range_m
     }
 }
 
-void initialize_centers(std::vector<point> & points, std::map<point, uint> & cluster_centers, uint num_clusters)
+void initialize_centers(const std::vector<point> & points, std::vector<point> & centers, const uint num_clusters)
 {
-    // initialize map 
-    for(uint i = 0; i < points.size(); i++)
-    {
-        cluster_centers[points[i]] = 0;
-    }
-
-    for(auto elem : cluster_centers)
-    {
-        for(auto point : elem.first)
-            std::cout << point;
-        std::cout << "," << elem.second << std::endl;
-    }
+    // initialize maps 
 
     std::random_device dev;
     std::mt19937 rng(dev());
@@ -46,48 +35,79 @@ void initialize_centers(std::vector<point> & points, std::map<point, uint> & clu
     for(uint i = 1; i <= num_clusters; i++)
     {
         idx = uniformDistribution_idx(rng);
-        // find idx of point in cluster center
-        cluster_centers[points[idx]] = i;
-    }
-    for(auto elem : cluster_centers)
-    {
-        for(auto point : elem.first)
-            std::cout << point;
-        std::cout << "," << elem.second << std::endl;
+        centers.push_back(points[idx]);
     }
 }
 
-void assign_points(std::vector<point> & points, std::map<point, uint> & cluster_centers, std::vector<uint> assignment, uint num_clusters)
+float compute_distance(const point &p1, const point &p2)
 {
-    float []d;
-    for(p : points)
+    float d2 = 0;
+    for(uint i = 0; i < p2.size(); i++)
     {
-        for(uint center = 0; center < num_clusters; center ++)
+        d2+= std::pow((p2[i]-p1[i]),2);
+    }
+
+    return std::sqrt(d2);
+}
+
+void assign_points_to_clusters(const std::vector<point> & points, const std::vector<point> & centers,
+ std::vector<uint> &assignment, const uint num_clusters)
+{
+    float min_dist, dist;
+    uint idx_assign = 0;
+    for(uint p_idx = 0; p_idx < points.size(); p_idx++)
+    {
+        min_dist = 10000;
+        for(uint center_idx = 0; center_idx < num_clusters; center_idx++)
         {
-            d[center] = compute_distance(p, center);
+            dist = compute_distance(points[p_idx], centers[center_idx]);
+            if (dist < min_dist)
+            {
+                min_dist = dist;
+                idx_assign = center_idx;
+            } 
         }
-        
+        assignment[p_idx] = idx_assign; //cluster index that corresponds to the min element of d
     }
 }
- */
 
+void compute_centroids(const std::vector<point> &points, std::vector<point> centroids, const uint num_clusters)
+{
+
+}
+
+void kmeans(const uint num_points, const uint num_clusters, const int range_min, const int range_max, 
+uint max_iter, std::vector<point> points, std::vector<point> centers,std::vector<uint> assignment)
+{
+        initialize_points(points, num_points, range_min, range_max);
+        initialize_centers(points,centers,num_clusters);
+        assign_points_to_clusters(points, centers, assignment, num_clusters);
+        for(uint iter = 0; iter < max_iter; iter ++)
+        {
+            int i =1;
+            // recompute centroids
+            // reassign_points: can reuse assign_points_to_clusters
+        }
+}
 int main()
 {
     std::cout << "ok here we go" << std::endl;
     unsigned int num_points = 15; 
     unsigned int num_clusters = 3;
-    int range_min = -5;
-    int range_max =  5;
+    int bounding_box_min = -5;
+    int bounding_box_max =  5;
+    unsigned int max_number_of_lloyd_iterations = 10;
 
     std::vector<point> points;
-    initialize_points(points, num_points, range_min, range_max);
+    points.reserve(num_points);
 
-    std::map<point, uint > map_cluster_centers;
-    initialize_centers(points, map_cluster_centers, num_clusters);
+    std::vector<point> centers;
+    centers.reserve(num_clusters);
 
-    std::vector<uint> points_assignment;
-    assign_points(points, map_cluster_centers, points_assignment, num_clusters);
+    std::vector<uint> assignment;
+    assignment.reserve(num_points);
 
+    kmeans(num_points, num_clusters, bounding_box_min, bounding_box_max, max_number_of_lloyd_iterations, points, centers, assignment);
     // initialize random unif points, clusters
     // send to kernel to compute voronoi cells
     // construct new cluster centers
