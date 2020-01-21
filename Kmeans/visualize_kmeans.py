@@ -10,18 +10,18 @@ import matplotlib.cm as cm
 
 def color_points(points, assignment, colors):
     for i in range(len(assignment)):
-        plt.scatter(points[i,0], points[i,1], c=colors[int(assignment[i])])
+        plt.scatter(points[i,0], points[i,1], c=[colors[int(assignment[i]),:]])
    
 
 def color_centroids(centroids, assignment, colors):
     ncolor = 0
     for i in range(len(centroids)):
-        plt.scatter(centroids[i,0], centroids[i,1],  marker = '^', c = colors[ncolor])
+        plt.scatter(centroids[i,0], centroids[i,1],  marker = '^', c = 'k')
         ncolor = ncolor + 1
         
-num_iter = 100
-num_points = 120
-num_clusters = 10
+num_iter = 10
+num_points = 15
+num_clusters = 3
 save_every = 20
 
 fname = "build/points_n" + str(num_points) + "_iter" + str(0) + ".txt"
@@ -41,6 +41,15 @@ for i in range(num_iter):
         
         fname = "build/centroids_n" + str(num_points) + "_iter" + str(i) + ".txt"
         centroids = np.loadtxt(fname)
-        #color_centroids(centroids, assignment, colors)
+        color_centroids(centroids, assignment, colors)
+        plt.show()
+    else:
+        fname = "build/assignment_n" + str(num_points) + "_iter" + str(i) + ".txt"
+        assignment = np.loadtxt(fname)
+        color_points(points, assignment, colors)
+        
+        fname = "build/centroids_n" + str(num_points) + "_iter" + str(i) + ".txt"
+        centroids = np.loadtxt(fname)
+        color_centroids(centroids, assignment, colors)
         plt.show()
     

@@ -4,25 +4,29 @@
 #include <map>
 #include <fstream>
 #include <iterator>
+#include <cassert>
+#include <set>
 
 #include "utils.h"
 
-void initialize_points(std::vector<point> & points, const uint num_points, const int range_min, const int range_max)
+void initialize_points(std::vector<point> & points, const uint dim, const uint num_points, const int range_min, const int range_max)
 {
     std::random_device dev;
     std::mt19937 rng(dev());
 
-    std::uniform_real_distribution<float> uniformRealDistribution_x(range_min, range_max);
-    std::uniform_real_distribution<float> uniformRealDistribution_y(range_min, range_max);
-
-    float x, y;
+    std::uniform_real_distribution<float> uniformRealDistribution(range_min, range_max);
+    float coord;
+    
     for(uint i = 0; i < num_points; i++)
     {
-        x = uniformRealDistribution_x(rng);
-        y = uniformRealDistribution_y(rng);
-        points.emplace_back(point{x,y});
+        point p;
+        for(uint j = 0; j < dim; j++)
+        {
+            coord = uniformRealDistribution(rng);
+            p.emplace_back(coord);
+        }      
+        points.emplace_back(p);
     }
-
 }
 
 void initialize_centers(const std::vector<point> & points, std::vector<point> & centers, const uint num_clusters)
@@ -31,16 +35,19 @@ void initialize_centers(const std::vector<point> & points, std::vector<point> & 
 
     std::random_device dev;
     std::mt19937 rng(dev());
-    std::uniform_int_distribution<int> uniformDistribution_idx(0, points.size());
+    std::uniform_int_distribution<int> uniformDistribution_idx(0, points.size()-1);
 
     // assign cluster centers
     uint idx;
-    for(uint i = 1; i <= num_clusters; i++)
+    std::set<int> cluster_indices;
+
+    while (cluster_indices.size() < num_clusters)
     {
         idx = uniformDistribution_idx(rng);
-        centers.push_back(points[idx]);
+        cluster_indices.insert(idx);
     }
 
+    for (auto idx : cluster_indices) centers.push_back(points[idx]);
 }
 
 float compute_distance(const point &p1, const point &p2)
@@ -97,40 +104,61 @@ void reassign_points_to_clusters(const std::vector<point> & points, const std::v
     }
 }
 
-void compute_centroids(std::vector<point> &points, std::vector<point> centroids, 
+void compute_centroids(const std::vector<point> &points, const uint dim, std::vector<point> centroids, 
 std::vector<uint> assignment, uint num_clusters)
 {
-    std::vector<point> means(num_clusters, point{0,0});
+    //std::vector<point> means(num_clusters, point{0,0});
     //uint num_points_per_cluster[num_clusters] = {0};
     std::vector<uint> num_points_per_cluster(num_clusters, 0);
+
     uint cluster_idx = 0;
     for (uint p_idx = 0; p_idx < points.size(); p_idx ++)
     {
         cluster_idx = assignment[p_idx];
-        for(uint coord = 0; coord < points[p_idx].size(); coord ++)
+        for(uint coord = 0; coord < dim; coord ++)
         {
-            means[cluster_idx][coord] =  means[cluster_idx][coord] + points[p_idx][coord]; //
+            centroids[cluster_idx][coord] =  centroids[cluster_idx][coord] + points[p_idx][coord]; //
+            std::cout << "p" << coord << "=" << points[p_idx][coord]  << std::endl;
         }
-        num_points_per_cluster[cluster_idx] ++;
+        std::cout << "cluster sum"  << std::endl;
+        for (auto elem: centroids[cluster_idx])
+            std::cout << elem << std::endl;
+
+        
+        num_points_per_cluster[cluster_idx] = num_points_per_cluster[cluster_idx] + 1;
+
+        std::cout << "num_points_per_cluster" << cluster_idx << " " << num_points_per_cluster[cluster_idx] << std::endl;
     }
     for (uint cluster_idx = 0; cluster_idx < num_clusters; cluster_idx ++)
     { // avoid 0 division
-        for (uint coord = 0; coord < points[0].size(); coord ++)
-            means[cluster_idx][coord] = means[cluster_idx][coord] /(num_points_per_cluster[cluster_idx]+ 0.01);
+        for (uint coord = 0; coord < dim; coord ++)
+        {
+            assert(num_points_per_cluster[cluster_idx] > 0);
+            centroids[cluster_idx][coord] = centroids[cluster_idx][coord] /(num_points_per_cluster[cluster_idx]);
+        }     
+    }
+    for (const auto &vt : centroids)
+    {
+        std::copy(vt.cbegin(), vt.cend(),
+                  std::ostream_iterator<float>(std::cout, " "));
+        std::cout << '\n';
     }
 }
 
-void kmeans(const uint num_points, const uint num_clusters, const int range_min, const int range_max, 
+void kmeans(const uint num_points, const uint dim, const uint num_clusters, const int range_min, const int range_max, 
 uint max_iter, std::vector<point> points, std::vector<point> centers,std::vector<uint> assignment)
 {
-        initialize_points(points, num_points, range_min, range_max);
+        initialize_points(points, dim, num_points, range_min, range_max);
         initialize_centers(points,centers,num_clusters);
         assign_points_to_clusters(points, centers, assignment, num_clusters);
+        create_snapshot(points,centers,assignment, num_points, num_clusters,0);
         for(uint iter = 0; iter < max_iter; iter ++)
         {
-            compute_centroids(points, centers, assignment, num_clusters);
-            reassign_points_to_clusters(points, centers, assignment, num_clusters);
-            if (iter %20 == 0)
+            compute_centroids(points, dim, centers, assignment, num_clusters); // pb: not moving
+            if(iter < max_iter-1)
+                reassign_points_to_clusters(points, centers, assignment, num_clusters);
+            //if (iter %20 == 0)
+            if (iter > 0)
                 create_snapshot(points,centers,assignment, num_points, num_clusters,iter);
         }
 }
