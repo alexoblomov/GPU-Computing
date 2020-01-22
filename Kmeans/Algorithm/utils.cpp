@@ -9,7 +9,7 @@
 
 #include "utils.h"
 
-void initialize_points(std::vector<point> & points, const uint dim, const uint num_points, const int range_min, const int range_max)
+void initialize_points(std::vector<point> & points, uint dim, uint num_points, int range_min, int range_max)
 {
     std::random_device dev;
     std::mt19937 rng(dev());
@@ -29,7 +29,7 @@ void initialize_points(std::vector<point> & points, const uint dim, const uint n
     }
 }
 
-void initialize_centers(const std::vector<point> & points, std::vector<point> & centers, const uint num_clusters)
+void initialize_centers(const std::vector<point> & points, std::vector<point> & centers, uint num_clusters)
 {
     // initialize maps 
 
@@ -62,12 +62,13 @@ float compute_distance(const point &p1, const point &p2)
 }
 
 void assign_points_to_clusters(const std::vector<point> & points, const std::vector<point> & centers,
- std::vector<uint> &assignment, const uint num_clusters)
+ std::vector<uint> &assignment, uint num_clusters)
 {
     float min_dist, dist;
-    uint idx_assign = 0;
+    uint idx_assign;
     for(uint p_idx = 0; p_idx < points.size(); p_idx++)
     {
+        idx_assign = 0;
         min_dist = 10000;
         for(uint center_idx = 0; center_idx < num_clusters; center_idx++)
         {
@@ -83,7 +84,7 @@ void assign_points_to_clusters(const std::vector<point> & points, const std::vec
 }
 
 void reassign_points_to_clusters(const std::vector<point> & points, const std::vector<point> & centers,
- std::vector<uint> &assignment, const uint num_clusters)
+ std::vector<uint> &assignment, uint num_clusters)
 {
     float cur_dist, dist;
     uint idx_assign;
@@ -104,49 +105,43 @@ void reassign_points_to_clusters(const std::vector<point> & points, const std::v
     }
 }
 
-void compute_centroids(const std::vector<point> &points, const uint dim, std::vector<point> centroids, 
-std::vector<uint> assignment, uint num_clusters)
+void compute_centroids(const std::vector<point> &points, uint dim, std::vector<point> &centroids, 
+const std::vector<uint> &assignment, uint num_clusters)
 {
-    //std::vector<point> means(num_clusters, point{0,0});
-    //uint num_points_per_cluster[num_clusters] = {0};
     std::vector<uint> num_points_per_cluster(num_clusters, 0);
 
     uint cluster_idx = 0;
+    // clear elements in centroid
     for (uint p_idx = 0; p_idx < points.size(); p_idx ++)
     {
         cluster_idx = assignment[p_idx];
         for(uint coord = 0; coord < dim; coord ++)
         {
-            centroids[cluster_idx][coord] =  centroids[cluster_idx][coord] + points[p_idx][coord]; //
-            std::cout << "p" << coord << "=" << points[p_idx][coord]  << std::endl;
-        }
-        std::cout << "cluster sum"  << std::endl;
-        for (auto elem: centroids[cluster_idx])
-            std::cout << elem << std::endl;
-
-        
-        num_points_per_cluster[cluster_idx] = num_points_per_cluster[cluster_idx] + 1;
-
-        std::cout << "num_points_per_cluster" << cluster_idx << " " << num_points_per_cluster[cluster_idx] << std::endl;
+            centroids[cluster_idx][coord] =  0; 
+        }       
     }
+    // compute sum of points in a cluster
+    for (uint p_idx = 0; p_idx < points.size(); p_idx ++)
+    {
+        cluster_idx = assignment[p_idx];
+        for(uint coord = 0; coord < dim; coord ++)
+            centroids[cluster_idx][coord] =  centroids[cluster_idx][coord] + points[p_idx][coord];
+        num_points_per_cluster[cluster_idx] = num_points_per_cluster[cluster_idx] + 1;
+    }
+
+    // average out this value by the number of points
     for (uint cluster_idx = 0; cluster_idx < num_clusters; cluster_idx ++)
-    { // avoid 0 division
+    { 
         for (uint coord = 0; coord < dim; coord ++)
         {
             assert(num_points_per_cluster[cluster_idx] > 0);
             centroids[cluster_idx][coord] = centroids[cluster_idx][coord] /(num_points_per_cluster[cluster_idx]);
         }     
     }
-    for (const auto &vt : centroids)
-    {
-        std::copy(vt.cbegin(), vt.cend(),
-                  std::ostream_iterator<float>(std::cout, " "));
-        std::cout << '\n';
-    }
 }
 
-void kmeans(const uint num_points, const uint dim, const uint num_clusters, const int range_min, const int range_max, 
-uint max_iter, std::vector<point> points, std::vector<point> centers,std::vector<uint> assignment)
+void kmeans(uint num_points, uint dim, uint num_clusters, int range_min, int range_max, 
+uint max_iter, std::vector<point> &points, std::vector<point> &centers, std::vector<uint> &assignment)
 {
         initialize_points(points, dim, num_points, range_min, range_max);
         initialize_centers(points,centers,num_clusters);
