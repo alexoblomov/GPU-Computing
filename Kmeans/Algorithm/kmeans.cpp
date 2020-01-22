@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     unsigned int num_clusters = 3;
     int bounding_box_min = -5;
     int bounding_box_max =  5;
-    unsigned int max_number_of_lloyd_iterations = 5;
+    unsigned int max_iter = 5;
 
     assert(num_points >= num_clusters);
 
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     // ------------------------------------------------------------------
     timer.reset();
     start_time = static_cast<double>(timer.getTimeMilliseconds()) / 1000.0;
-    kmeans(num_points,point_dimension, num_clusters, bounding_box_min, bounding_box_max, max_number_of_lloyd_iterations, points, centers, assignment);
+    kmeans(num_points,point_dimension, num_clusters, bounding_box_min, bounding_box_max, max_iter, points, centers, assignment);
     run_time = (static_cast<double>(timer.getTimeMilliseconds()) / 1000.0) - start_time;
 
     std::cout << "Sequential algorithm time: " << run_time-start_time << "s" << std::endl;
@@ -59,7 +59,8 @@ int main(int argc, char *argv[])
     assign_points_to_clusters(g_points, g_centers, g_assignment, num_clusters);
 
     cl::Buffer d_P, d_C, d_A; // Matrices in device memory
-    
+    // write function to initialize d_i
+        
     try
     {
         cl_uint deviceIndex = 0;
@@ -85,6 +86,7 @@ int main(int argc, char *argv[])
         std::vector<cl::Device> chosen_device;
         chosen_device.push_back(device);
         cl::Context context(chosen_device);
+        cl::CommandQueue queue(context, device);
 
         // Load in kernel source, creating a program object for the context
         cl::Program program(context, util::loadProgram("kmeans.cl"), true);
@@ -94,8 +96,26 @@ int main(int argc, char *argv[])
 
         // Display max group size for execution
         std::cout << "\nWork Group Size " << kernel_km.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device) << std::endl;
-        std:: cout << "Work Group Memory size " << kernel_km.getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device) << std::endl;
+        std::cout << "Work Group Memory size " << kernel_km.getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device) << std::endl;
 
+        // Initialize arguments of kernel
+        kernel_km.setArg(0, num_points);
+        kernel_km.setArg(1, point_dimension);
+        kernel_km.setArg(2, num_clusters);
+        kernel_km.setArg(3, bounding_box_min);
+        kernel_km.setArg(4, bounding_box_max);
+        kernel_km.setArg(5, max_iter);
+        kernel_km.setArg(6, d_P);
+        kernel_km.setArg(7, d_C);
+        kernel_km.setArg(8, d_A);
+
+        // Set workspace and workgroup topologies
+        cl::NDRange global(num_clusters, num_clusters);
+        cl::NDRange local(16, 16);
+
+        queue.enqueueNDRangeKernel(kernel_km, cl::NullRange, global, local);
+
+        queue.finish();
     }
     catch (cl::Error err)
     {
