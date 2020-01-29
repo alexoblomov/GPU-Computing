@@ -140,6 +140,17 @@ const std::vector<uint> &assignment, uint num_clusters)
     }
 }
 
+void kmeans_iterations(uint num_points, uint dim, uint num_clusters, int range_min, int range_max, 
+uint max_iter, std::vector<point> &points, std::vector<point> &centers, std::vector<uint> &assignment)
+{
+    for(uint iter = 0; iter < max_iter; iter ++)
+    {
+            compute_centroids(points, dim, centers, assignment, num_clusters);
+            if(iter < max_iter-1)
+                reassign_points_to_clusters(points, centers, assignment, num_clusters);
+    }
+}
+
 void kmeans(uint num_points, uint dim, uint num_clusters, int range_min, int range_max, 
 uint max_iter, std::vector<point> &points, std::vector<point> &centers, std::vector<uint> &assignment)
 {
@@ -149,7 +160,7 @@ uint max_iter, std::vector<point> &points, std::vector<point> &centers, std::vec
         create_snapshot(points,centers,assignment, num_points, num_clusters,0);
         for(uint iter = 0; iter < max_iter; iter ++)
         {
-            compute_centroids(points, dim, centers, assignment, num_clusters); // pb: not moving
+            compute_centroids(points, dim, centers, assignment, num_clusters);
             if(iter < max_iter-1)
                 reassign_points_to_clusters(points, centers, assignment, num_clusters);
             //if (iter %20 == 0)

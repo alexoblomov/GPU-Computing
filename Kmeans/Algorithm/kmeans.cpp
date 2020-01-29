@@ -36,12 +36,21 @@ int main(int argc, char *argv[])
     std::vector<point> centers;
     std::vector<uint> assignment(num_points, 0);
 
+    initialize_points(points, point_dimension, num_points, bounding_box_min, bounding_box_max);
+    initialize_centers(points, centers, num_clusters);
+    assign_points_to_clusters(points, centers, assignment, num_clusters);
+
+    // initialize vectors for the GPU computations with the same values
+    std::vector<point> g_points = points;
+    std::vector<point> g_centers = centers;
+    std::vector<uint> g_assignment =  assignment;
+
     // ------------------------------------------------------------------
     // Run sequential kmeans
     // ------------------------------------------------------------------
     timer.reset();
     start_time = static_cast<double>(timer.getTimeMilliseconds()) / 1000.0;
-    kmeans(num_points,point_dimension, num_clusters, bounding_box_min, bounding_box_max, max_iter, points, centers, assignment);
+    kmeans_iterations(num_points,point_dimension, num_clusters, bounding_box_min, bounding_box_max, max_iter, points, centers, assignment);
     run_time = (static_cast<double>(timer.getTimeMilliseconds()) / 1000.0) - start_time;
 
     std::cout << "Sequential algorithm time: " << run_time-start_time << "s" << std::endl;
@@ -51,16 +60,8 @@ int main(int argc, char *argv[])
     // ------------------------------------------------------------------
     timer.reset();
 
-    std::vector<point> g_points;
-    std::vector<point> g_centers;
-    std::vector<uint> g_assignment(num_points, 0);
-    initialize_points(g_points, point_dimension, num_points, bounding_box_min, bounding_box_max);
-    initialize_centers(g_points, g_centers, num_clusters);
-    assign_points_to_clusters(g_points, g_centers, g_assignment, num_clusters);
 
-    cl::Buffer d_P, d_C, d_A; // Matrices in device memory
-    // write function to initialize d_i
-        
+    cl::Buffer d_P, d_C, d_A;
     try
     {
         cl_uint deviceIndex = 0;
@@ -88,6 +89,14 @@ int main(int argc, char *argv[])
         cl::Context context(chosen_device);
         cl::CommandQueue queue(context, device);
 
+        // Setup the buffers
+        std::cout << "Setting up the device buffers "<< "\n";
+        d_A = cl::Buffer(context, g_assignment.begin(), g_assignment.end(), false);
+        std::cout << "Set up the device buffer for A "<< "\n";
+
+        d_P = cl::Buffer(context, points.begin(), points.end(), true);
+        d_C = cl::Buffer(context, g_centers.begin(), g_centers.end(), false);
+
         // Load in kernel source, creating a program object for the context
         cl::Program program(context, util::loadProgram("kmeans.cl"), true);
 
@@ -100,18 +109,19 @@ int main(int argc, char *argv[])
 
         // Initialize arguments of kernel
         kernel_km.setArg(0, num_points);
-        kernel_km.setArg(1, point_dimension);
-        kernel_km.setArg(2, num_clusters);
-        kernel_km.setArg(3, bounding_box_min);
-        kernel_km.setArg(4, bounding_box_max);
-        kernel_km.setArg(5, max_iter);
-        kernel_km.setArg(6, d_P);
-        kernel_km.setArg(7, d_C);
-        kernel_km.setArg(8, d_A);
+        kernel_km.setArg(1, num_clusters);
+        kernel_km.setArg(2, max_iter);
+        kernel_km.setArg(3, point_dimension);
+        kernel_km.setArg(4, d_P);
+        kernel_km.setArg(5, d_C);
+        kernel_km.setArg(6, d_A);
 
+        std::cout << "able to send data to kernel" << std::endl;
         // Set workspace and workgroup topologies
         cl::NDRange global(num_clusters, num_clusters);
         cl::NDRange local(16, 16);
+
+        std::cout << "able to set topology" << std::endl;
 
         queue.enqueueNDRangeKernel(kernel_km, cl::NullRange, global, local);
 

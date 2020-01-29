@@ -11,6 +11,10 @@ void reassign_points_to_clusters(const std::vector<point> & points, const std::v
  std::vector<uint> &assignment, uint num_clusters);
 void compute_centroids(const std::vector<point> &points, uint dim, std::vector<point> &centroids, 
 const std::vector<uint> &assignment, uint num_clusters);
+
+void kmeans_iterations(uint num_points, uint dim, uint num_clusters, int range_min, int range_max, 
+uint max_iter, std::vector<point> &points, std::vector<point> &centers, std::vector<uint> &assignment);
+
 void kmeans(uint num_points, uint dim, uint num_clusters, int range_min, int range_max, 
 uint max_iter, std::vector<point> &points, std::vector<point> &centers, std::vector<uint> &assignment);
 
